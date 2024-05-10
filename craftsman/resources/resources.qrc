@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="resources">
+    <file>icon/document_add.png</file>
+    <file>icon/help.png</file>
+    <file>icon/stop.png</file>
+    <file>icon/document_text.png</file>
+    <file>icon/folder_open.png</file>
+    <file>icon/play.png</file>
+    <file>icon/save.png</file>
+    <file>icon/add.png</file>
+    <file>icon/folder.png</file>
+    <file>icon/more_horizontal.png</file>
+    <file>icon/subtract.png</file>
+    <file>icon/craftsman.png</file>
+  </qresource>
+</RCC>

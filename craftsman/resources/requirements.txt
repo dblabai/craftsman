@@ -1,0 +1,2 @@
+nuitka~=2.1
+imageio~=2.34.0
