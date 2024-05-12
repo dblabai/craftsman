@@ -1,11 +1,13 @@
 HELP.md
 target/
 dist/
+output/
 .venv/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 **/__pycache__
+**/.DS_Store
 
 ### STS ###
 .apt_generated
