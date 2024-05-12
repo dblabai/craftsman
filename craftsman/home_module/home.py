@@ -200,13 +200,21 @@ class MainWindow(QMainWindow):
 
         compile_mode = self.m_ui.compileModeComboBox.currentText()
         console_current_index = self.m_ui.consoleComboBox.currentIndex()
-        console_current = (
-            "--windows-disable-console" if console_current_index == 1 else ""
-        )
+        if self.platform_system == "Windows":
+            console_current = (
+                "--windows-disable-console" if console_current_index == 1 else ""
+            )
+        else:
+            console_current = ""
 
         app_icon = self.m_ui.iconLineEdit.text()
         if app_icon:
-            app_icon = f"--windows-icon-from-ico={quote(app_icon)}"
+            if self.platform_system == "Windows":
+                app_icon = f"--windows-icon-from-ico={quote(app_icon)}"
+            elif self.platform_system == "Darwin":
+                app_icon = f"--macos-app-icon={quote(app_icon)}"
+            else:
+                app_icon = ""
 
         main_code = self.m_ui.mainCodeLineEdit.text()
         if not main_code:
@@ -297,6 +305,12 @@ class MainWindow(QMainWindow):
             )
             self.run_command(requirements_command, compile_path)
 
+        mac_command = ""
+        if self.platform_system == "Darwin":
+            mac_command = "--macos-create-app-bundle"
+            if compile_mode == "standalone":
+                mac_command += f" --macos-app-name={app_pack_name}"
+
         nuitka_command = f"""
             {quote(python_env_path())} -m nuitka \
             --{compile_mode} \
@@ -307,6 +321,7 @@ class MainWindow(QMainWindow):
             --output-dir={quote(output_path)} \
             -o {quote(app_pack_name)}{app_format} \
             {app_icon} \
+            {mac_command} \
             {remove_output_command} \
             {quote(main_code)}
         """
@@ -316,11 +331,24 @@ class MainWindow(QMainWindow):
         self.compile_worker = CompileWorker()
         self.compile_worker.stdout.connect(self.show_log_message)
         self.compile_worker.finished.connect(
-            lambda: self.nuitka_finished(after_script, compile_path)
+            lambda: self.nuitka_finished(
+                after_script, compile_path, app_pack_name, output_path
+            )
         )
         asyncio.ensure_future(self.compile_worker.start(nuitka_command, compile_path))
 
-    def nuitka_finished(self, after_script, compile_path):
+    def nuitka_finished(self, after_script, compile_path, app_pack_name, output_path):
+        if self.platform_system == "Darwin":
+            old_app_path = f"{output_path}/main.app"
+            if os.path.exists(old_app_path):
+                try:
+                    os.rename(old_app_path, f"{output_path}/{app_pack_name}.app")
+                except Exception as e:
+                    # 重命名应用时发生错误
+                    show_message(
+                        self.tr(f"An error occurred while renaming the app: {str(e)}")
+                    )
+
         if after_script:
             # 正在执行编译应用程序后置脚本
             self.show_log_message(self.tr("Executing compile application post-script"))
